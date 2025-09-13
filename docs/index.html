@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Illustrated Guide to Large Language Models (LLMs)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .section-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        h1, h2, h3 {
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+        .interactive-box {
+            border: 1px solid #e2e8f0; /* slate-200 */
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        .btn {
+            display: inline-block;
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+        .btn:hover {
+            background-color: #4338ca; /* indigo-700 */
+        }
+        .btn-secondary {
+            background-color: #e2e8f0; /* slate-200 */
+            color: #334155; /* slate-700 */
+        }
+        .btn-secondary:hover {
+            background-color: #cbd5e1; /* slate-300 */
+        }
+        .code-block {
+            background-color: #1e293b; /* slate-800 */
+            color: #e2e8f0; /* slate-200 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .masked-word {
+            background-color: #fde047; /* yellow-300 */
+            padding: 0.1rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .choice-button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #cbd5e1; /* slate-300 */
+            background-color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .choice-button:hover {
+            background-color: #f1f5f9; /* slate-100 */
+            border-color: #94a3b8; /* slate-400 */
+        }
+        .choice-button.correct {
+            background-color: #dcfce7; /* green-100 */
+            border-color: #22c55e; /* green-500 */
+        }
+        .choice-button.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            border-color: #ef4444; /* red-500 */
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <svg class="h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V8.25a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 8.25v7.5A2.25 2.25 0 006.75 18z" />
+                    </svg>
+                    <h1 class="text-xl font-bold text-slate-900">The Illustrated Guide to LLMs</h1>
+                </div>
+                <nav class="hidden md:flex space-x-6 text-sm font-medium">
+                    <a href="#introduction" class="text-slate-600 hover:text-indigo-600">Introduction</a>
+                    <a href="#training" class="text-slate-600 hover:text-indigo-600">Training Stages</a>
+                    <a href="#ethics" class="text-slate-600 hover:text-indigo-600">Using LLMs Wisely</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <!-- Introduction Section -->
+        <section id="introduction" class="section-card">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">What is a Large Language Model?</h2>
+            <p class="text-lg text-slate-600 mb-4">
+                Imagine an intern who has read almost every book, article, and website on the internet. They don't truly "understand" things like a human, but they have learned the patterns of how words, sentences, and ideas connect on a massive scale. A Large Language Model (LLM) is like that intern.
+            </p>
+            <p class="text-slate-600 mb-6">
+                Technically, an LLM is a massive neural network—a type of artificial intelligence inspired by the human brain—trained on vast quantities of text data. Its primary function is to process and generate human-like text. It does this by calculating the probability of the next word in a sequence. By repeatedly choosing the most likely next word, it can write essays, answer questions, translate languages, and even write code.
+            </p>
+            <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-200">
+                <h3 class="text-xl font-semibold text-indigo-800 mb-2">The Core Idea: Word Prediction</h3>
+                <p class="text-indigo-700 mb-4">
+                    At its heart, an LLM is a sophisticated next-word predictor. If you give it the sentence "The cat sat on the...", it knows from its training that "mat", "sofa", or "floor" are highly probable next words, while "moon" or "idea" are extremely unlikely.
+                </p>
+                <div class="code-block">
+                    The cat sat on the <span class="text-green-400 font-bold animate-pulse">mat.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Training Stages Section -->
+        <section id="training" class="section-card">
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">How Are LLMs Trained?</h2>
+            <p class="text-lg text-slate-600 mb-6">Training an LLM is a multi-stage process, like sending that intern through different levels of schooling to make them a helpful assistant. It starts broad and becomes progressively more specialized.</p>
+
+            <!-- Stage 1: Pre-training -->
+            <div class="border-t border-slate-200 pt-6 mt-6">
+                <h3 class="text-2xl font-semibold text-slate-800 mb-3"><span class="text-indigo-600">Stage 1:</span> Pre-training & Masked Language Modeling</h3>
+                <p class="text-slate-600 mb-4">
+                    This is the foundational stage where the model learns grammar, facts about the world, and basic reasoning. It's fed a colossal dataset of text from the internet and books. The primary training technique used here is often **Masked Language Modeling (MLM)**.
+                </p>
+                <p class="text-slate-600 mb-4">
+                    The process is simple but powerful: take a sentence, hide (or "mask") a word, and ask the model to predict the hidden word based on the surrounding context. By doing this billions of times, the model builds a complex understanding of language structure.
+                </p>
+                
+                <div class="interactive-box">
+                    <h4 class="font-semibold text-lg mb-2">Interactive Example: Guess the Masked Word</h4>
+                    <p class="text-sm text-slate-500 mb-4">This simulates the MLM process. Your goal is to guess the masked word. The model learns by comparing its prediction to the correct answer.</p>
+                    <div id="mlm-game">
+                        <p id="mlm-sentence" class="text-lg mb-4"></p>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="mlm-input" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Your guess...">
+                            <button id="mlm-submit" class="btn">Submit</button>
+                            <button id="mlm-next" class="btn btn-secondary">Next</button>
+                        </div>
+                        <p id="mlm-feedback" class="mt-3 text-sm font-medium"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stage 2: Supervised Fine-Tuning (SFT) -->
+            <div class="border-t border-slate-200 pt-6 mt-8">
+                <h3 class="text-2xl font-semibold text-slate-800 mb-3"><span class="text-indigo-600">Stage 2:</span> Supervised Fine-Tuning (SFT)</h3>
+                <p class="text-slate-600 mb-4">
+                    After pre-training, the model is a knowledgeable but not necessarily helpful "base model". It knows facts, but it doesn't know how to follow instructions or have a conversation. SFT fixes this.
+                </p>
+                <p class="text-slate-600 mb-4">
+                    In this stage, human labelers create a smaller, high-quality dataset of prompts and ideal responses. These are structured as "instruction-output" pairs. The model is then trained specifically on this dataset to learn how to be a helpful AI assistant.
+                </p>
+                
+                <div class="interactive-box">
+                    <h4 class="font-semibold text-lg mb-2">Interactive Example: Be the Teacher</h4>
+                    <p class="text-sm text-slate-500 mb-4">You are the human labeler. For the given prompt, choose the best response to teach the AI. This is how a high-quality SFT dataset is built.</p>
+                    <div id="sft-game">
+                        <p class="font-semibold text-slate-700">Prompt:</p>
+                        <p id="sft-prompt" class="bg-white p-3 rounded-md mb-4 border border-slate-200"></p>
+                        <p class="font-semibold text-slate-700 mb-2">Choose the best response to fine-tune the model:</p>
+                        <div id="sft-choices"></div>
+                        <p id="sft-feedback" class="mt-3 text-sm font-medium"></p>
+                        <button id="sft-next" class="btn btn-secondary mt-3">Next Prompt</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stage 3: Reinforcement Learning with Human Feedback (RLHF) -->
+            <div class="border-t border-slate-200 pt-6 mt-8">
+                <h3 class="text-2xl font-semibold text-slate-800 mb-3"><span class="text-indigo-600">Stage 3:</span> Reinforcement Learning with Human Feedback (RLHF)</h3>
+                <p class="text-slate-600 mb-4">
+                    SFT makes the model better, but it's hard to capture the nuances of human preference in a single "correct" answer. RLHF is a more advanced technique to align the model's behavior with what humans find helpful, harmless, and honest. It has two main steps:
+                </p>
+                <ul class="list-decimal list-inside text-slate-600 mb-4 space-y-2">
+                    <li><strong>Train a Reward Model:</strong> The LLM generates several different responses to a prompt. Human labelers then rank these responses from best to worst. This data is used to train a separate AI, the "Reward Model," whose job is to predict which responses a human would prefer.</li>
+                    <li><strong>Fine-tune with Reinforcement Learning:</strong> The LLM is then fine-tuned again. It generates a response, and the Reward Model gives it a "reward" score. The LLM's goal is to adjust its own parameters to generate responses that maximize this reward score, effectively learning to produce outputs that humans prefer.</li>
+                </ul>
+                
+                <div class="interactive-box">
+                    <h4 class="font-semibold text-lg mb-2">Interactive Example: The Reward Modeler</h4>
+                    <p class="text-sm text-slate-500 mb-4">You are the human providing feedback. Compare the two AI responses and rate which one is better. Your preference is used to train the Reward Model.</p>
+                    <div id="rlhf-game">
+                        <p class="font-semibold text-slate-700">Prompt:</p>
+                        <p id="rlhf-prompt" class="bg-white p-3 rounded-md mb-4 border border-slate-200"></p>
+                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <p class="text-center font-medium mb-2">Response A</p>
+                                <div id="rlhf-response-a" class="bg-white p-3 rounded-md border border-slate-200 h-full"></div>
+                            </div>
+                            <div>
+                                <p class="text-center font-medium mb-2">Response B</p>
+                                <div id="rlhf-response-b" class="bg-white p-3 rounded-md border border-slate-200 h-full"></div>
+                            </div>
+                        </div>
+                        <div class="slider-container">
+                            <span class="text-sm font-medium text-slate-600">A is much better</span>
+                            <input id="rlhf-slider" type="range" min="-100" max="100" value="0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                            <span class="text-sm font-medium text-slate-600">B is much better</span>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button id="rlhf-submit" class="btn">Submit Preference</button>
+                            <button id="rlhf-next" class="btn btn-secondary">Next Example</button>
+                        </div>
+                         <p id="rlhf-feedback" class="mt-3 text-sm font-medium text-center"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Ethics Section -->
+        <section id="ethics" class="section-card">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">Using LLMs Wisely: A User's Guide</h2>
+            <p class="text-lg text-slate-600 mb-6">
+                LLMs are powerful tools, but they are not sources of truth. They are pattern-matching machines. Understanding their limitations is key to using them effectively and responsibly.
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <h3 class="text-xl font-semibold text-red-600 mb-1">Hallucinations: Making Things Up</h3>
+                    <p class="text-slate-600">
+                        Because an LLM's goal is to generate plausible-sounding text, it can sometimes invent facts, sources, or details that are completely false. It's not "lying"—it doesn't have a concept of truth—it's simply stringing words together in a way that seems correct based on its training data.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-amber-600 mb-1">Bias in, Bias out</h3>
+                    <p class="text-slate-600">
+                        LLMs are trained on a snapshot of the internet, which contains a wide range of human biases. These biases—social, political, and cultural—can be reflected or even amplified in the model's responses.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-green-600 mb-1">The Golden Rule: Always Verify</h3>
+                    <p class="text-slate-600">
+                        Treat information from an LLM as a starting point, not a final answer. If you're using it for factual information, always verify the claims with reliable, primary sources.
+                    </p>
+                </div>
+            </div>
+
+            <div class="interactive-box mt-8">
+                <h4 class="font-semibold text-lg mb-2">Interactive Example: Spot the Hallucination</h4>
+                <p class="text-sm text-slate-500 mb-4">Read the AI-generated text below. One of the "facts" is a hallucination—plausible-sounding but completely false. Click on the sentence you believe is incorrect.</p>
+                <div id="hallucination-game">
+                    <p class="font-semibold text-slate-700 mb-2" id="hallucination-title"></p>
+                    <div id="hallucination-text" class="bg-white p-4 rounded-md border border-slate-200 space-y-2">
+                    </div>
+                    <p id="hallucination-feedback" class="mt-3 text-sm font-medium"></p>
+                    <button id="hallucination-next" class="btn btn-secondary mt-3">Next Example</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white mt-8 border-t border-slate-200">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-slate-500">
+            <p>&copy; 2025 The Illustrated Guide to LLMs. An educational resource for understanding AI.</p>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Masked Language Modeling (MLM) Game ---
+            const mlmGame = {
+                sentences: [
+                    { text: "The quick brown fox jumps over the lazy ___.", answer: "dog" },
+                    { text: "Paris is the capital city of ___.", answer: "France" },
+                    { text: "Water is essential for all known forms of ___.", answer: "life" },
+                    { text: "The sun rises in the east and sets in the ___.", answer: "west" },
+                ],
+                currentIndex: 0,
+                elements: {
+                    sentence: document.getElementById('mlm-sentence'),
+                    input: document.getElementById('mlm-input'),
+                    submit: document.getElementById('mlm-submit'),
+                    next: document.getElementById('mlm-next'),
+                    feedback: document.getElementById('mlm-feedback'),
+                },
+                init() {
+                    this.loadSentence();
+                    this.elements.submit.addEventListener('click', () => this.checkAnswer());
+                    this.elements.input.addEventListener('keyup', (e) => {
+                        if (e.key === 'Enter') this.checkAnswer();
+                    });
+                    this.elements.next.addEventListener('click', () => this.loadNext());
+                    this.elements.next.style.display = 'none';
+                },
+                loadSentence() {
+                    const current = this.sentences[this.currentIndex];
+                    this.elements.sentence.innerHTML = current.text.replace('___', '<span class="masked-word">[MASK]</span>');
+                    this.elements.input.value = '';
+                    this.elements.feedback.textContent = '';
+                    this.elements.input.disabled = false;
+                    this.elements.submit.style.display = 'inline-block';
+                    this.elements.next.style.display = 'none';
+                    this.elements.input.focus();
+                },
+                checkAnswer() {
+                    const guess = this.elements.input.value.trim().toLowerCase();
+                    const answer = this.sentences[this.currentIndex].answer.toLowerCase();
+                    if (guess === answer) {
+                        this.elements.feedback.textContent = `Correct! The model learns when its prediction ('${guess}') matches the actual word.`;
+                        this.elements.feedback.className = 'mt-3 text-sm font-medium text-green-600';
+                    } else {
+                        this.elements.feedback.textContent = `Not quite. The correct word was "${answer}". The model adjusts its internal weights to make a better prediction next time.`;
+                        this.elements.feedback.className = 'mt-3 text-sm font-medium text-red-600';
+                    }
+                    this.elements.sentence.innerHTML = this.sentences[this.currentIndex].text.replace('___', `<span class="bg-green-200 text-green-800 font-bold p-1 rounded">${answer}</span>`);
+                    this.elements.input.disabled = true;
+                    this.elements.submit.style.display = 'none';
+                    this.elements.next.style.display = 'inline-block';
+                },
+                loadNext() {
+                    this.currentIndex = (this.currentIndex + 1) % this.sentences.length;
+                    this.loadSentence();
+                }
+            };
+            mlmGame.init();
+
+            // --- Supervised Fine-Tuning (SFT) Game ---
+            const sftGame = {
+                 prompts: [
+                    {
+                        prompt: "Explain gravity to a 6-year-old.",
+                        choices: [
+                            { text: "Gravity is a fundamental interaction which causes mutual attraction between all things with mass or energy.", isCorrect: false, feedback: "This is too technical for a 6-year-old. SFT teaches the model to adjust its tone for the audience." },
+                            { text: "It's like an invisible string that pulls everything towards the Earth, so we don't float away!", isCorrect: true, feedback: "Excellent! This answer is simple, uses an analogy, and is perfect for the target audience." },
+                            { text: "F = G * (m1*m2)/r^2", isCorrect: false, feedback: "This is Newton's formula for universal gravitation. While correct, it's not a helpful explanation for a child." }
+                        ]
+                    },
+                    {
+                        prompt: "List three benefits of regular exercise.",
+                        choices: [
+                            { text: "Just do it.", isCorrect: false, feedback: "This is unhelpful and doesn't answer the question. The model learns to provide complete answers." },
+                            { text: "1. Stronger heart and better circulation. 2. Improved mood and reduced stress. 3. Increased energy levels throughout the day.", isCorrect: true, feedback: "Perfect! This response is structured, clear, and directly answers the prompt." },
+                            { text: "Exercise is good. It makes you not tired. It is healthy.", isCorrect: false, feedback: "This is too vague. SFT helps the model learn to provide specific and informative details." }
+                        ]
+                    }
+                ],
+                currentIndex: 0,
+                elements: {
+                    prompt: document.getElementById('sft-prompt'),
+                    choices: document.getElementById('sft-choices'),
+                    feedback: document.getElementById('sft-feedback'),
+                    next: document.getElementById('sft-next'),
+                },
+                init() {
+                    this.loadPrompt();
+                    this.elements.next.addEventListener('click', () => this.loadNext());
+                    this.elements.next.style.display = 'none';
+                },
+                loadPrompt() {
+                    const current = this.prompts[this.currentIndex];
+                    this.elements.prompt.textContent = current.prompt;
+                    this.elements.choices.innerHTML = '';
+                    this.elements.feedback.textContent = '';
+                    this.elements.next.style.display = 'none';
+                    current.choices.forEach(choice => {
+                        const button = document.createElement('button');
+                        button.className = 'choice-button';
+                        button.textContent = choice.text;
+                        button.addEventListener('click', () => this.selectChoice(button, choice), { once: true });
+                        this.elements.choices.appendChild(button);
+                    });
+                },
+                selectChoice(button, choice) {
+                    Array.from(this.elements.choices.children).forEach(b => b.disabled = true);
+                    if (choice.isCorrect) {
+                        button.classList.add('correct');
+                        this.elements.feedback.className = 'mt-3 text-sm font-medium text-green-600';
+                    } else {
+                        button.classList.add('incorrect');
+                        this.elements.feedback.className = 'mt-3 text-sm font-medium text-red-600';
+                        // Also highlight the correct one
+                        const correctButton = Array.from(this.elements.choices.children).find((b, i) => this.prompts[this.currentIndex].choices[i].isCorrect);
+                        if (correctButton) correctButton.classList.add('correct');
+                    }
+                    this.elements.feedback.textContent = `Feedback: ${choice.feedback}`;
+                    this.elements.next.style.display = 'inline-block';
+                },
+                loadNext() {
+                    this.currentIndex = (this.currentIndex + 1) % this.prompts.length;
+                    this.loadPrompt();
+                }
+            };
+            sftGame.init();
+
+
+            // --- Reinforcement Learning with Human Feedback (RLHF) Game ---
+            const rlhfGame = {
+                examples: [
+                    {
+                        prompt: "Write a short, encouraging note to someone starting a new project.",
+                        responses: {
+                            a: "Good luck with your new project. I hope it goes well and you achieve your goals.",
+                            b: "You've got this! Every great journey starts with a single step, and you're already on your way. Embrace the challenge and enjoy the process!"
+                        }
+                    },
+                    {
+                        prompt: "What's a creative way to use a cardboard box?",
+                        responses: {
+                            a: "You can use it for storage.",
+                            b: "You could turn it into a castle for a cat, a spaceship for a child, or even cut it up to use as seed starters for a garden."
+                        }
+                    }
+                ],
+                currentIndex: 0,
+                elements: {
+                    prompt: document.getElementById('rlhf-prompt'),
+                    responseA: document.getElementById('rlhf-response-a'),
+                    responseB: document.getElementById('rlhf-response-b'),
+                    slider: document.getElementById('rlhf-slider'),
+                    submit: document.getElementById('rlhf-submit'),
+                    next: document.getElementById('rlhf-next'),
+                    feedback: document.getElementById('rlhf-feedback'),
+                },
+                init() {
+                    this.loadExample();
+                    this.elements.submit.addEventListener('click', () => this.submitPreference());
+                    this.elements.next.addEventListener('click', () => this.loadNext());
+                },
+                loadExample() {
+                    const current = this.examples[this.currentIndex];
+                    this.elements.prompt.textContent = current.prompt;
+                    this.elements.responseA.textContent = current.responses.a;
+                    this.elements.responseB.textContent = current.responses.b;
+                    this.elements.slider.value = 0;
+                    this.elements.feedback.textContent = '';
+                    this.elements.submit.style.display = 'inline-block';
+                    this.elements.next.style.display = 'none';
+                    this.elements.slider.disabled = false;
+                },
+                submitPreference() {
+                    const value = parseInt(this.elements.slider.value);
+                    let rewardA, rewardB;
+                    let feedbackText = '';
+
+                    if (value < -10) {
+                        rewardA = 1.0;
+                        rewardB = 1.5;
+                        feedbackText = "You strongly prefer Response B. The reward model learns that qualities like creativity and enthusiasm (in Response B) should receive a higher score.";
+                    } else if (value > 10) {
+                        rewardA = 1.5;
+                        rewardB = 1.0;
+                         feedbackText = "You strongly prefer Response A. The reward model learns that qualities like directness (in Response A) should receive a higher score.";
+                    } else {
+                        rewardA = 1.2;
+                        rewardB = 1.2;
+                        feedbackText = "You find the responses comparable. The reward model learns that both responses are acceptable but perhaps not exceptional.";
+                    }
+                    
+                    // In a real system, the prompt would determine which response is better.
+                    // Here we hardcode the "better" response for demonstration
+                    if (this.currentIndex === 0) { // Encouraging note
+                       rewardA = 1.0; rewardB = 1.5; // B is better
+                       feedbackText = "You preferred Response B. The reward model learns that a more enthusiastic and encouraging tone gets a higher reward for this type of prompt.";
+                    } else { // Cardboard box
+                       rewardA = 1.0; rewardB = 1.8; // B is better
+                       feedbackText = "You preferred Response B. The reward model learns that creative and detailed answers are much better than simple, obvious ones.";
+                    }
+                    
+                    if(value > 0) { // User chose A
+                        const temp = rewardA; rewardA = rewardB; rewardB = temp;
+                    }
+
+
+                    this.elements.feedback.textContent = feedbackText + ` (Scores: A=${rewardA}, B=${rewardB})`;
+                    this.elements.feedback.className = 'mt-3 text-sm font-medium text-indigo-600';
+                    this.elements.submit.style.display = 'none';
+                    this.elements.next.style.display = 'inline-block';
+                    this.elements.slider.disabled = true;
+                },
+                loadNext() {
+                    this.currentIndex = (this.currentIndex + 1) % this.examples.length;
+                    this.loadExample();
+                }
+            };
+            rlhfGame.init();
+
+
+            // --- Hallucination Game ---
+            const hallucinationGame = {
+                 examples: [
+                    {
+                        title: "The History of Coffee",
+                        text: [
+                            { content: "Coffee was first discovered in Ethiopia in the 9th century, according to legend.", isHallucination: false },
+                            { content: "The world's largest coffee producer is Brazil, a title it has held for over 150 years.", isHallucination: false },
+                            { content: "To enhance its flavor, coffee beans were originally boiled in salt water before roasting.", isHallucination: true, feedback: "This is a hallucination. While various roasting and brewing methods exist, boiling beans in salt water is not a traditional step." },
+                            { content: "The term 'cappuccino' comes from the Capuchin friars, referring to the color of their habits.", isHallucination: false },
+                        ]
+                    },
+                    {
+                        title: "The Moon",
+                        text: [
+                            { content: "The Moon is Earth's only natural satellite and the fifth largest in the Solar System.", isHallucination: false },
+                            { content: "Its surface is covered in a fine, grey dust made of 'lunar glass', created by micrometeorite impacts.", isHallucination: true, feedback: "This is a plausible-sounding hallucination. The dust is called regolith, but the 'lunar glass' concept as described is an invention." },
+                            { content: "The same side of the Moon consistently faces Earth, a phenomenon known as synchronous rotation.", isHallucination: false },
+                            { content: "The first person to walk on the moon was Neil Armstrong in 1969.", isHallucination: false },
+                        ]
+                    }
+                ],
+                currentIndex: 0,
+                elements: {
+                    title: document.getElementById('hallucination-title'),
+                    text: document.getElementById('hallucination-text'),
+                    feedback: document.getElementById('hallucination-feedback'),
+                    next: document.getElementById('hallucination-next'),
+                },
+                init() {
+                    this.loadExample();
+                    this.elements.next.addEventListener('click', () => this.loadNext());
+                },
+                loadExample() {
+                    const current = this.examples[this.currentIndex];
+                    this.elements.title.textContent = current.title;
+                    this.elements.text.innerHTML = '';
+                    this.elements.feedback.textContent = '';
+                    this.elements.next.style.display = 'none';
+
+                    current.text.forEach(sentence => {
+                        const p = document.createElement('p');
+                        p.textContent = sentence.content;
+                        p.className = 'cursor-pointer hover:bg-slate-100 p-2 rounded-md transition-colors';
+                        p.addEventListener('click', () => this.checkSentence(p, sentence), { once: true });
+                        this.elements.text.appendChild(p);
+                    });
+                },
+                checkSentence(pElement, sentence) {
+                    Array.from(this.elements.text.children).forEach(child => {
+                         child.style.pointerEvents = 'none'; // Disable further clicks
+                    });
+
+                    if (sentence.isHallucination) {
+                        pElement.className = 'p-2 rounded-md bg-red-100 border border-red-500';
+                        this.elements.feedback.textContent = `Correct! ${sentence.feedback}`;
+                        this.elements.feedback.className = 'mt-3 text-sm font-medium text-green-600';
+                    } else {
+                        pElement.className = 'p-2 rounded-md bg-green-100 border border-green-500';
+                        const correctSentenceInfo = this.examples[this.currentIndex].text.find(s => s.isHallucination);
+                        this.elements.feedback.textContent = `Incorrect. While that sentence is true, the hallucination was: "${correctSentenceInfo.content}"`;
+                        this.elements.feedback.className = 'mt-3 text-sm font-medium text-red-600';
+                        // Highlight the actual hallucination
+                         Array.from(this.elements.text.children).forEach((child, index) => {
+                            if (this.examples[this.currentIndex].text[index].isHallucination) {
+                                child.className = 'p-2 rounded-md bg-red-100 border border-red-500';
+                            }
+                        });
+                    }
+                    this.elements.next.style.display = 'inline-block';
+                },
+                loadNext() {
+                    this.currentIndex = (this.currentIndex + 1) % this.examples.length;
+                    this.loadExample();
+                }
+            };
+            hallucinationGame.init();
+
+        });
+    </script>
+</body>
+</html>
