@@ -103,6 +103,17 @@
             gap: 1rem;
             width: 100%;
         }
+        .prediction-item {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeIn 0.5s ease forwards;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -136,15 +147,25 @@
                 Imagine an intern who has read almost every book, article, and website on the internet. They don't truly "understand" things like a human, but they have learned the patterns of how words, sentences, and ideas connect on a massive scale. A Large Language Model (LLM) is like that intern.
             </p>
             <p class="text-slate-600 mb-6">
-                Technically, an LLM is a massive neural network—a type of artificial intelligence inspired by the human brain—trained on vast quantities of text data. Its primary function is to process and generate human-like text. It does this by calculating the probability of the next word in a sequence. By repeatedly choosing the most likely next word, it can write essays, answer questions, translate languages, and even write code.
+                Technically, an LLM is a massive neural network—a type of artificial intelligence inspired by the human brain—trained on vast quantities of text data. Its primary function is to process and generate human-like text. It does this by calculating the probability of the next word (or, more accurately, "token") in a sequence. By repeatedly choosing a likely next token, it can write essays, answer questions, translate languages, and even write code.
             </p>
-            <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-200">
-                <h3 class="text-xl font-semibold text-indigo-800 mb-2">The Core Idea: Word Prediction</h3>
-                <p class="text-indigo-700 mb-4">
-                    At its heart, an LLM is a sophisticated next-word predictor. If you give it the sentence "The cat sat on the...", it knows from its training that "mat", "sofa", or "floor" are highly probable next words, while "moon" or "idea" are extremely unlikely.
+            <div class="interactive-box">
+                <h3 class="text-xl font-semibold text-indigo-800 mb-2">The Core Idea: Next Token Prediction</h3>
+                <p class="text-slate-600 mb-4">
+                    At its heart, an LLM is a sophisticated prediction engine. Given a sequence of text, it calculates a probability score for all possible next tokens. A "token" can be a full word, a part of a word (like "ing"), or punctuation. Click below to see this in action.
                 </p>
-                <div class="code-block">
-                    The cat sat on the <span class="text-green-400 font-bold animate-pulse">mat.</span>
+                <div id="token-predictor">
+                    <div class="bg-white p-3 rounded-md border border-slate-200 mb-4 text-lg">
+                        <span id="prompt-text" class="text-slate-700">The cat sat on the&nbsp;</span>
+                        <span id="predicted-word" class="font-bold text-indigo-600 animate-pulse">...</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                       <button id="predict-btn" class="btn">Predict Probabilities</button>
+                       <button id="predict-next-prompt" class="btn btn-secondary">Next Prompt</button>
+                    </div>
+                    <div id="prediction-list" class="mt-4 space-y-2">
+                        <!-- Probabilities will be injected here by JavaScript -->
+                    </div>
                 </div>
             </div>
         </section>
@@ -298,6 +319,88 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Token Prediction Game ---
+            const tokenPredictor = {
+                prompts: [
+                    {
+                        prompt: "The cat sat on the ",
+                        predictions: [
+                            { token: "mat", probability: 65 },
+                            { token: "couch", probability: 20 },
+                            { token: "floor", probability: 10 },
+                            { token: "windowsill", probability: 5 }
+                        ]
+                    },
+                    {
+                        prompt: "To bake a cake, you first need to ",
+                        predictions: [
+                            { token: "preheat", probability: 55 },
+                            { token: "gather", probability: 25 },
+                            { token: "mix", probability: 15 },
+                            { token: "buy", probability: 5 }
+                        ]
+                    },
+                    {
+                        prompt: "The capital of France is ",
+                        predictions: [
+                            { token: "Paris", probability: 98 },
+                            { token: "a", probability: 1 },
+                            { token: "the", probability: 1 }
+                        ]
+                    }
+                ],
+                currentIndex: 0,
+                elements: {
+                    promptText: document.getElementById('prompt-text'),
+                    predictedWord: document.getElementById('predicted-word'),
+                    predictBtn: document.getElementById('predict-btn'),
+                    nextBtn: document.getElementById('predict-next-prompt'),
+                    predictionList: document.getElementById('prediction-list')
+                },
+                init() {
+                    this.loadPrompt();
+                    this.elements.predictBtn.addEventListener('click', () => this.showPredictions());
+                    this.elements.nextBtn.addEventListener('click', () => this.loadNext());
+                },
+                loadPrompt() {
+                    this.elements.promptText.innerHTML = this.prompts[this.currentIndex].prompt + '&nbsp;';
+                    this.elements.predictedWord.innerHTML = '...';
+                    this.elements.predictedWord.classList.add('animate-pulse');
+                    this.elements.predictionList.innerHTML = '';
+                    this.elements.predictBtn.disabled = false;
+                },
+                showPredictions() {
+                    this.elements.predictBtn.disabled = true;
+                    this.elements.predictionList.innerHTML = '';
+                    const predictions = this.prompts[this.currentIndex].predictions;
+
+                    this.elements.predictedWord.textContent = predictions[0].token;
+                    this.elements.predictedWord.classList.remove('animate-pulse');
+
+                    predictions.forEach((p, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'prediction-item bg-white p-3 rounded-md border border-slate-200';
+                        item.style.animationDelay = `${index * 100}ms`;
+                        item.innerHTML = `
+                            <div class="flex justify-between items-center text-sm sm:text-base">
+                                <span class="font-mono text-indigo-600 font-medium">'${p.token}'</span>
+                                <span class="text-sm font-semibold text-slate-600">${p.probability}%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5 mt-2">
+                                <div class="bg-indigo-500 h-2.5 rounded-full" style="width: ${p.probability}%"></div>
+                            </div>
+                        `;
+                        this.elements.predictionList.appendChild(item);
+                    });
+                },
+                loadNext() {
+                    this.currentIndex = (this.currentIndex + 1) % this.prompts.length;
+                    this.loadPrompt();
+                }
+            };
+            tokenPredictor.init();
+
 
             // --- Masked Language Modeling (MLM) Game ---
             const mlmGame = {
