@@ -65,6 +65,7 @@
             border-radius: 0.5rem;
             font-family: monospace;
             white-space: pre-wrap;
+            word-break: break-all;
         }
         .masked-word {
             background-color: #fde047; /* yellow-300 */
@@ -113,6 +114,11 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+        .text-highlight {
+            background-color: #e0e7ff; /* indigo-100 */
+            padding: 2px 4px;
+            border-radius: 3px;
         }
     </style>
 </head>
@@ -167,6 +173,50 @@
                         <!-- Probabilities will be injected here by JavaScript -->
                     </div>
                 </div>
+            </div>
+        </section>
+        
+        <!-- N-Grams vs LLMs -->
+        <section id="ngrams" class="section-card">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">Old School vs. New School: Probability in Language</h2>
+            <p class="text-lg text-slate-600 mb-4">
+                The idea of predicting the next word isn't new. Before modern LLMs, the dominant approach was using **n-gram models**. It's crucial to understand them to appreciate what makes LLMs so special.
+            </p>
+            <p class="text-slate-600 mb-4">
+                An n-gram model works by creating a giant probability table from a body of text. It doesn't "learn" language; it just counts. For example, a **bigram** (n=2) model looks at pairs of words. If the phrase "thank you" appears 100 times in its training data, and "you" is followed by "very" 20 times, it calculates a 20% probability that "very" will follow "thank you". It's a rigid, statistical lookup.
+            </p>
+
+            <div class="interactive-box">
+                <h4 class="font-semibold text-lg mb-2">Interactive Example: The N-Gram Calculator</h4>
+                <p class="text-sm text-slate-500 mb-4">Below is a small text corpus. We will act as a bigram model and calculate the probability of the next word based on the *single* preceding word. This demonstrates the "lookup table" method.</p>
+                <p class="font-semibold text-slate-700">Corpus:</p>
+                <div id="ngram-corpus" class="code-block mb-4"></div>
+                <div class="flex items-center gap-2 mb-4">
+                    <label for="ngram-select" class="font-medium">After the word:</label>
+                    <select id="ngram-select" class="rounded-md border-slate-300"></select>
+                </div>
+                <div id="ngram-results"></div>
+            </div>
+
+            <div class="mt-8">
+                <h3 class="text-2xl font-semibold text-slate-800 mb-3">Why LLMs are a Revolution</h3>
+                <p class="text-slate-600 mb-4">
+                    N-gram models have critical flaws that LLMs overcome:
+                </p>
+                <ul class="list-disc list-inside text-slate-600 space-y-3">
+                    <li>
+                        <strong class="text-slate-700">The Sparsity Problem:</strong> If an n-gram model has never seen the phrase "the armadillo sat" in its training data, it would assign a 0% probability to *any* word coming next. It has no ability to handle novelty. An LLM, however, understands what an "armadillo" is and what "sitting" is and can infer that a plausible next word might be "on", "down", or "still".
+                    </li>
+                    <li>
+                        <strong class="text-slate-700">Lack of Long-Term Context:</strong> N-grams have a tiny memory (only n-1 words). Consider the sentence: "Having grown up in France, she spoke fluent...". An n-gram model might predict "English" or "German" based on general frequency. An LLM's <span class="font-semibold text-indigo-600">attention mechanism</span> can look back at the entire sentence, see the word "France," and correctly infer that the most probable next word is "French".
+                    </li>
+                     <li>
+                        <strong class="text-slate-700">No Semantic Understanding:</strong> N-grams don't know that "couch" and "sofa" are similar. If it's only seen "cat on the sofa", it has no idea that "cat on the couch" is also a very likely phrase. LLMs learn <span class="font-semibold text-indigo-600">embeddings</span>—mathematical representations of words—that place similar concepts close together. This allows them to generalize and understand language in a much more human-like way.
+                    </li>
+                </ul>
+                <p class="mt-4 text-slate-600 bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                    In short, n-grams count word sequences, while LLMs learn the <span class="font-bold">underlying concepts and relationships</span> between words. This is the difference between memorizing phrases and actually understanding a language.
+                </p>
             </div>
         </section>
 
@@ -400,6 +450,82 @@
                 }
             };
             tokenPredictor.init();
+
+            // --- N-Gram Calculator ---
+            const ngramModel = {
+                corpus: "the quick brown fox jumps over the lazy dog . the lazy dog sleeps in the sun . the sun is bright .",
+                elements: {
+                    corpus: document.getElementById('ngram-corpus'),
+                    select: document.getElementById('ngram-select'),
+                    results: document.getElementById('ngram-results')
+                },
+                words: [],
+                uniqueWords: [],
+                init() {
+                    this.words = this.corpus.split(' ');
+                    this.uniqueWords = [...new Set(this.words)];
+                    this.elements.corpus.textContent = this.corpus;
+                    this.populateSelect();
+                    this.elements.select.addEventListener('change', () => this.calculate());
+                    this.calculate();
+                },
+                populateSelect() {
+                    this.uniqueWords.forEach(word => {
+                        if (word === '.') return; // Don't predict after a period
+                        const option = document.createElement('option');
+                        option.value = word;
+                        option.textContent = word;
+                        this.elements.select.appendChild(option);
+                    });
+                },
+                calculate() {
+                    const precedingWord = this.elements.select.value;
+                    const followers = {};
+                    let totalOccurrences = 0;
+
+                    for (let i = 0; i < this.words.length - 1; i++) {
+                        if (this.words[i] === precedingWord) {
+                            totalOccurrences++;
+                            const nextWord = this.words[i + 1];
+                            followers[nextWord] = (followers[nextWord] || 0) + 1;
+                        }
+                    }
+
+                    this.displayResults(followers, totalOccurrences, precedingWord);
+                },
+                displayResults(followers, total, precedingWord) {
+                    this.elements.results.innerHTML = '';
+                    if (total === 0) {
+                        this.elements.results.innerHTML = `<p class="text-slate-500">No occurrences of "${precedingWord}" found to predict from.</p>`;
+                        return;
+                    }
+
+                    const sortedFollowers = Object.entries(followers).sort(([, a], [, b]) => b - a);
+                    
+                    let resultHTML = `<p class="mb-2 text-slate-600">The word "<span class="font-bold text-slate-800">${precedingWord}</span>" appears <span class="font-bold text-slate-800">${total}</span> time(s). Here are the words that follow it:</p>`;
+                    resultHTML += `<div class="space-y-2">`;
+                    
+                    sortedFollowers.forEach(([word, count]) => {
+                        const probability = ((count / total) * 100).toFixed(1);
+                        resultHTML += `
+                            <div class="bg-white p-3 rounded-md border border-slate-200">
+                                <div class="flex justify-between items-center text-sm sm:text-base">
+                                    <span class="font-mono text-indigo-600 font-medium">'${word}'</span>
+                                    <span class="text-sm font-semibold text-slate-600">${probability}%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2.5 mt-2">
+                                    <div class="bg-indigo-500 h-2.5 rounded-full" style="width: ${probability}%"></div>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-1.5">Appeared ${count} time(s) out of ${total}.</p>
+                            </div>
+                        `;
+                    });
+
+                    resultHTML += `</div>`;
+                    this.elements.results.innerHTML = resultHTML;
+                }
+            };
+            ngramModel.init();
 
 
             // --- Masked Language Modeling (MLM) Game ---
