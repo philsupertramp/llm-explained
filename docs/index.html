@@ -703,11 +703,11 @@
                     let rewardA, rewardB;
                     let feedbackText = '';
 
-                    if (value < -10) {
+                    if (value > 0) {
                         rewardA = 1.0;
                         rewardB = 1.5;
                         feedbackText = "You strongly prefer Response B. The reward model learns that qualities like creativity and enthusiasm (in Response B) should receive a higher score.";
-                    } else if (value > 10) {
+                    } else if (value < 0) {
                         rewardA = 1.5;
                         rewardB = 1.0;
                          feedbackText = "You strongly prefer Response A. The reward model learns that qualities like directness (in Response A) should receive a higher score.";
@@ -716,21 +716,6 @@
                         rewardB = 1.2;
                         feedbackText = "You find the responses comparable. The reward model learns that both responses are acceptable but perhaps not exceptional.";
                     }
-                    
-                    // In a real system, the prompt would determine which response is better.
-                    // Here we hardcode the "better" response for demonstration
-                    if (this.currentIndex === 0) { // Encouraging note
-                       rewardA = 1.0; rewardB = 1.5; // B is better
-                       feedbackText = "You preferred Response B. The reward model learns that a more enthusiastic and encouraging tone gets a higher reward for this type of prompt.";
-                    } else { // Cardboard box
-                       rewardA = 1.0; rewardB = 1.8; // B is better
-                       feedbackText = "You preferred Response B. The reward model learns that creative and detailed answers are much better than simple, obvious ones.";
-                    }
-                    
-                    if(value > 0) { // User chose A
-                        const temp = rewardA; rewardA = rewardB; rewardB = temp;
-                    }
-
 
                     this.elements.feedback.textContent = feedbackText + ` (Scores: A=${rewardA}, B=${rewardB})`;
                     this.elements.feedback.className = 'mt-3 text-sm font-medium text-indigo-600';
