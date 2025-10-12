@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Attention Mechanism</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .word {
+            transition: all 0.3s ease;
+        }
+        .word.active {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+        .vector-box {
+            display: grid;
+            gap: 4px;
+        }
+        .vector-cell {
+            transition: background-color 0.5s ease, color 0.5s ease;
+            position: relative;
+        }
+        .tooltip {
+            visibility: hidden;
+            width: max-content;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .vector-cell:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        .matrix-grid {
+            display: grid;
+            gap: 4px;
+        }
+        .matrix-cell {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 4px;
+            background-color: #f3f4f6; /* Default gray */
+            transition: background-color 0.3s ease;
+        }
+        .matrix-cell.masked {
+            background-image: repeating-linear-gradient(-45deg, #e5e7eb, #e5e7eb 5px, #d1d5db 5px, #d1d5db 10px);
+        }
+        .matrix-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 0.75rem; /* 12px */
+        }
+        @media (min-width: 640px) {
+            .matrix-label {
+                font-size: 0.875rem; /* 14px */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900">The Attention Mechanism: An Interactive Guide</h1>
+            <p class="mt-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">Click a word to see how the model decides which other words are important for understanding it.</p>
+        </header>
+
+        <!-- Step 1: Input Sentence -->
+        <section id="step-1" class="mb-12">
+            <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-center">Step 1: The Input Sentence</h2>
+            <p class="text-center text-gray-600 mb-6">Every word starts as an 'embedding'—a vector representing its meaning. Click a word to make it the 'Query'.</p>
+            <div id="sentence-container" class="flex justify-center items-center gap-2 md:gap-4 flex-wrap text-base sm:text-lg p-4 bg-white rounded-xl shadow-md">
+                <!-- Words will be injected here -->
+            </div>
+        </section>
+
+        <!-- Visualization Area -->
+        <div id="visualization-area" class="space-y-12 hidden">
+
+            <!-- NEW: Step 0 - Visual Analogy -->
+            <section id="step-0-visualization">
+                 <h2 class="text-xl sm:text-2xl font-semibold mb-2 text-center">The Big Picture: A Visual Analogy</h2>
+                 <p class="text-center text-gray-600 mb-6 max-w-4xl mx-auto">
+                    Before the math, let's get an intuitive feel. Think of attention as a heatmap of connections. For a chosen word (the "Query"), the model gives a score to every other word, indicating its relevance. The brighter the square, the higher the attention score.
+                 </p>
+                 <div id="attention-matrix-container" class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+                     <!-- Attention matrix will be injected here -->
+                 </div>
+                 
+                 <h3 class="text-lg sm:text-xl font-semibold mt-10 mb-2 text-center">An Important Detail: Attention Masks</h3>
+                 <p class="text-center text-gray-600 mb-6 max-w-4xl mx-auto">
+                    When a model generates text, it should only pay attention to previous words. To enforce this, a "causal attention mask" is used. It effectively hides all "future" words, preventing the model from cheating.
+                 </p>
+                 <div id="attention-mask-container" class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+                     <!-- Masked attention matrix will be injected here -->
+                 </div>
+                 <p class="text-center text-gray-600 mt-10 max-w-4xl mx-auto text-lg font-medium">Now, let's see how these weights are actually calculated...</p>
+            </section>
+
+            <!-- Step 2: Query, Key, Value Vectors -->
+            <section id="step-2">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-2 text-center">Step 2: Creating Q, K, V Vectors</h2>
+                <p class="text-center text-gray-600 mb-6 max-w-4xl mx-auto">
+                    From each word's embedding, we generate three new vectors.
+                    <br class="hidden sm:block">
+                    <strong class="text-blue-600">Query (Q)</strong>: What I'm looking for.
+                    <strong class="text-red-600">Key (K)</strong>: What I "contain".
+                    <strong class="text-green-600">Value (V)</strong>: What I communicate.
+                </p>
+                <div id="qkv-container" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- QKV visualizations will be injected here -->
+                </div>
+            </section>
+
+            <!-- Step 3: Attention Scores -->
+            <section id="step-3">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-2 text-center">Step 3: Calculating Attention Scores</h2>
+                <p class="text-center text-gray-600 mb-6 max-w-4xl mx-auto">We calculate a score by taking the dot product of the <strong class="text-blue-600">Query</strong> vector with every other word's <strong class="text-red-600">Key</strong> vector. A higher score means a stronger connection.</p>
+                <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+                    <div id="scores-explanation" class="text-center mb-6 text-lg"></div>
+                    <div id="scores-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-6 items-start">
+                        <!-- Scores will be injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 4: Softmax for Weights -->
+            <section id="step-4">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-2 text-center">Step 4: Normalizing with Softmax</h2>
+                <p class="text-center text-gray-600 mb-6 max-w-4xl mx-auto">The raw scores are passed through a softmax function. This turns them into positive numbers that sum to 1, which we can interpret as "attention weights".</p>
+                <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+                    <div id="softmax-container" class="space-y-4">
+                        <!-- Softmax bars will be injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 5: Final Output -->
+            <section id="step-5">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-2 text-center">Step 5: Creating the Contextualized Output</h2>
+                <p class="text-center text-gray-600 mb-6 max-w-4xl mx-auto">Finally, we create a new vector for our Query word. This is a weighted sum of all words' <strong class="text-green-600">Value (V)</strong> vectors, using the attention weights we just calculated.</p>
+                <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+                     <div id="output-explanation" class="text-center mb-6 text-base sm:text-lg break-words"></div>
+                     <div id="output-container" class="flex justify-center items-center">
+                        <!-- Final output vector will be shown here -->
+                     </div>
+                </div>
+            </section>
+        </div>
+        <footer class="text-center mt-12 text-gray-500">
+            <p>Built to make complex AI concepts a little more intuitive. All numbers are representational based on imaginary values, not accurate.</p>
+        </footer>
+    </div>
+
+
+    <script>
+        const sentence = ["The", "robot", "ate", "the", "delicious", "red", "apple"];
+        const embeddingDim = 4; // Simplified for visualization
+        let embeddings; // Will be initialized
+        
+        const Wq = [[0.8, 0.2, 0.4, 0.1], [0.3, 0.7, 0.1, 0.5], [0.6, 0.1, 0.9, 0.2], [0.4, 0.5, 0.3, 0.8]];
+        const Wk = [[0.5, 0.9, 0.2, 0.3], [0.1, 0.4, 0.7, 0.6], [0.8, 0.2, 0.5, 0.1], [0.3, 0.6, 0.1, 0.9]];
+        const Wv = [[0.7, 0.1, 0.5, 0.4], [0.2, 0.8, 0.3, 0.1], [0.1, 0.4, 0.6, 0.9], [0.9, 0.3, 0.2, 0.5]];
+
+        // --- UTILITY FUNCTIONS ---
+        const matrixMultiply = (matrix, vector) => matrix.map(row => parseFloat(row.reduce((sum, val, i) => sum + val * vector[i], 0).toFixed(2)));
+        const dotProduct = (vecA, vecB) => vecA.reduce((sum, val, i) => sum + val * vecB[i], 0);
+        const softmax = (arr) => {
+            const exps = arr.map(x => Math.exp(x));
+            const sumExps = exps.reduce((sum, val) => sum + val, 0);
+            return exps.map(e => e / sumExps);
+        };
+
+        // --- INITIALIZATION ---
+        const init = () => {
+            embeddings = sentence.map((word, i) => {
+                let seed = i + word.length;
+                return Array.from({ length: embeddingDim }, (_, j) => {
+                    seed = (seed * 9301 + 49297) % 233280;
+                    return parseFloat(((seed / 233280) * 2 - 1).toFixed(2));
+                });
+            });
+
+            const sentenceContainer = document.getElementById('sentence-container');
+            sentence.forEach((word, index) => {
+                const wordEl = document.createElement('div');
+                wordEl.textContent = word;
+                wordEl.dataset.index = index;
+                wordEl.className = 'word cursor-pointer p-2 sm:p-3 bg-gray-100 rounded-lg hover:bg-blue-200 hover:text-blue-800 shadow-sm';
+                wordEl.addEventListener('click', handleWordClick);
+                sentenceContainer.appendChild(wordEl);
+            });
+        };
+
+        // --- UI RENDERING FUNCTIONS ---
+        
+        const renderAttentionMatrix = (weights, containerId, queryIndex, isMasked = false) => {
+            const container = document.getElementById(containerId);
+            const size = sentence.length;
+            
+            let html = `<div class="matrix-grid" style="grid-template-columns: auto repeat(${size}, 1fr); grid-template-rows: auto repeat(${size}, 1fr);">`;
+            // Top labels
+            html += '<div></div>'; // Top-left empty cell
+            for (let i = 0; i < size; i++) {
+                html += `<div class="matrix-label break-all text-gray-500">${sentence[i]}</div>`;
+            }
+
+            // Rows
+            for (let i = 0; i < size; i++) {
+                html += `<div class="matrix-label break-all text-gray-500">${sentence[i]}</div>`; // Left label
+                for (let j = 0; j < size; j++) {
+                    let cellClass = 'matrix-cell';
+                    let style = '';
+                    if (isMasked && j > i) {
+                        cellClass += ' masked';
+                    }
+                    if (i === queryIndex) {
+                        const opacity = isMasked && j > i ? 0 : weights[j];
+                        style = `background-color: rgba(59, 130, 246, ${opacity});`; // blue-500
+                    }
+                    html += `<div class="${cellClass}" style="${style}"></div>`;
+                }
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        };
+
+        const createVectorHTML = (vector, title) => {
+            const cells = vector.map(val => 
+                `<div class="vector-cell bg-gray-200 rounded p-1 sm:p-2 text-center text-xs sm:text-sm font-mono relative group">
+                    ${val.toFixed(2)}
+                    <span class="tooltip">${title} vector value</span>
+                </div>`
+            ).join('');
+            return `<div class="vector-box" style="grid-template-columns: repeat(${embeddingDim}, 1fr);">${cells}</div>`;
+        };
+
+        const renderQKV = (queries, keys, values) => {
+            const container = document.getElementById('qkv-container');
+            container.innerHTML = `
+                <div class="bg-white p-4 rounded-xl shadow-md space-y-3">
+                    <h3 class="text-lg sm:text-xl font-semibold text-center text-blue-600">Query Vectors (Q)</h3>
+                    ${queries.map((q, i) => `<div class="flex flex-col sm:flex-row sm:items-center gap-2"><span class="font-medium sm:w-28 sm:text-right">${sentence[i]}:</span><div class="flex-1">${createVectorHTML(q, 'Query')}</div></div>`).join('')}
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md space-y-3">
+                    <h3 class="text-lg sm:text-xl font-semibold text-center text-red-600">Key Vectors (K)</h3>
+                    ${keys.map((k, i) => `<div class="flex flex-col sm:flex-row sm:items-center gap-2"><span class="font-medium sm:w-28 sm:text-right">${sentence[i]}:</span><div class="flex-1">${createVectorHTML(k, 'Key')}</div></div>`).join('')}
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md space-y-3">
+                    <h3 class="text-lg sm:text-xl font-semibold text-center text-green-600">Value Vectors (V)</h3>
+                    ${values.map((v, i) => `<div class="flex flex-col sm:flex-row sm:items-center gap-2"><span class="font-medium sm:w-28 sm:text-right">${sentence[i]}:</span><div class="flex-1">${createVectorHTML(v, 'Value')}</div></div>`).join('')}
+                </div>
+            `;
+        };
+        
+        const renderScores = (queryIndex, scores, keys, queryVector) => {
+            const container = document.getElementById('scores-container');
+            document.getElementById('scores-explanation').innerHTML = `Calculating scores for <strong class="text-blue-600 text-xl mx-1">${sentence[queryIndex]}</strong> (Query)`;
+            container.innerHTML = scores.map((score, i) => `
+                <div class="flex flex-col items-center space-y-2">
+                    <div class="font-bold text-lg">${sentence[i]}</div><div class="text-xs text-gray-500">(Key)</div>${createVectorHTML(keys[i], 'Key')}
+                    <div class="text-2xl font-bold text-red-500">·</div><div class="text-xs text-gray-500">(Query: ${sentence[queryIndex]})</div>${createVectorHTML(queryVector, 'Query')}
+                    <div class="text-2xl font-bold">=</div><div class="score-value text-xl sm:text-2xl font-bold p-2 bg-yellow-100 text-yellow-800 rounded-lg">${score.toFixed(2)}</div>
+                </div>`).join('');
+        };
+
+        const renderSoftmax = (weights) => {
+            const container = document.getElementById('softmax-container');
+            container.innerHTML = weights.map((weight, i) => {
+                const percentage = weight * 100;
+                return `<div class="grid grid-cols-[auto_1fr_auto] items-center gap-x-2 sm:gap-x-4">
+                    <span class="font-medium text-sm sm:text-base justify-self-end text-right">${sentence[i]}</span>
+                    <div class="w-full h-6 sm:h-8 bg-gray-200 rounded-md"><div class="h-full bg-indigo-500 rounded-md" style="width: ${percentage.toFixed(2)}%;" title="${percentage.toFixed(2)}%"></div></div>
+                    <span class="font-mono text-sm sm:text-lg w-16 sm:w-24 text-left">${percentage.toFixed(2)}%</span>
+                </div>`;
+            }).join('');
+        };
+        
+        const renderOutput = (outputVector, weights) => {
+            document.getElementById('output-explanation').innerHTML = `Output = ${weights.map((w, i) => `(${w.toFixed(2)} * <strong class="text-green-600">${sentence[i]}'s V</strong>)`).join(' + ')}`;
+            document.getElementById('output-container').innerHTML = `<div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 p-4 bg-gray-100 rounded-lg">
+                <span class="font-semibold text-lg">Final Vector:</span><div class="flex-1 w-full">${createVectorHTML(outputVector, 'Output')}</div>
+            </div>`;
+        };
+
+        // --- MAIN LOGIC ---
+        const handleWordClick = (event) => {
+            const selectedIndex = parseInt(event.target.dataset.index);
+            
+            document.querySelectorAll('.word').forEach(el => {
+                el.classList.remove('active', 'bg-blue-500', 'text-white');
+                if (parseInt(el.dataset.index) === selectedIndex) el.classList.add('active', 'bg-blue-500', 'text-white');
+            });
+
+            document.getElementById('visualization-area').classList.remove('hidden');
+
+            const queries = embeddings.map(e => matrixMultiply(Wq, e));
+            const keys = embeddings.map(e => matrixMultiply(Wk, e));
+            const values = embeddings.map(e => matrixMultiply(Wv, e));
+
+            const queryVector = queries[selectedIndex];
+            const scores = keys.map(keyVector => dotProduct(queryVector, keyVector));
+            const scaledScores = scores.map(score => score / Math.sqrt(embeddingDim));
+            const attentionWeights = softmax(scaledScores);
+            
+            const outputVector = Array(embeddingDim).fill(0);
+            values.forEach((v, i) => v.forEach((val, j) => outputVector[j] += val * attentionWeights[i]));
+
+            // --- Render Results ---
+            renderAttentionMatrix(attentionWeights, 'attention-matrix-container', selectedIndex, false);
+            renderAttentionMatrix(attentionWeights, 'attention-mask-container', selectedIndex, true);
+            renderQKV(queries, keys, values);
+            renderScores(selectedIndex, scores, keys, queryVector);
+            renderSoftmax(attentionWeights);
+            renderOutput(outputVector, attentionWeights);
+            
+            document.getElementById('step-0-visualization').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+       window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
